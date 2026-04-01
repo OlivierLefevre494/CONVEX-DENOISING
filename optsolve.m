@@ -1,9 +1,11 @@
-function [ unblur ] = optimizewrtblur(blurredimage, stepsize, relaxation, stepnumber, eigValArrK, gamma)
+function [ optsolve ] = optsolve(problem, algorithm, iterants ,kernel, blurredimage, params)
 [numRows, numCols] = size(blurredimage); %numRows = m, numCols = n
+
+
 
 %computes the numRow x numCol matrix of the eigenvalues for K and D1 and
 %D2; Here D1 = I oplus D1 in the paper and D2 = D1 oplus I.
-eigArry_K = eigValArrK;
+eigArry_K = eigValsForPeriodicConvOp(kernel, numRows, numCols);
 eigArry_D1 = eigValsForPeriodicConvOp([-1,1]', numRows, numCols);
 eigArry_D2 = eigValsForPeriodicConvOp([-1,1], numRows, numCols);
 
@@ -30,16 +32,12 @@ applyD = @(x) cat(3, applyD1(x), applyD2(x));
 ApplyA = @(x) cat(3, applyK(x), applyD1(x), applyD2(x));
 ApplyATrans = @(x) applyKTrans(x(:,:,1)) + applyD1Trans(x(:,:,2)) + applyD2Trans(x(:,:,3)); 
 
-proxtf = @(x) NormalizeImage(x);
-proxtg = @(x) cat(3, TwoNormProx(x(:,:,1), blurredimage, stepsize), IsoProx(x(:,:,2), x(:,:,3), gamma*stepsize));
-
-
 applyDTrans = @(y) applyD1Trans(y(:,:,1)) + applyD2Trans(y(:, :, 2));
 
 % Function which computes the (I + K^TK + D^TD)x where x in R^(m x n)
 % matrix and the eigenvalues of I + t*t*K^TK + t*t*D^TD; here t is the
 % stepsizes
-t = stepsize; % Need to change this for the various algorithms you are applying
+t = params.tprimaldr; % Need to change this for the various algorithms you are applying
 applyMat = @(x) x + applyKTrans(applyK(x)) + applyDTrans(applyD(x));
 eigValsMat = ones(numRows, numCols) + t*t*eigArry_KTrans.*eigArry_K + t*t*eigArry_D1Trans.*eigArry_D1...
     + t*t*eigArry_D2Trans.*eigArry_D2;
@@ -47,18 +45,18 @@ eigValsMat = ones(numRows, numCols) + t*t*eigArry_KTrans.*eigArry_K + t*t*eigArr
 %R^(m x n) Computing (I + K^T*K + D^T*D)^(-1)*x
 invertMatrix = @(x) ifft2(fft2(x)./eigValsMat); 
 
-z1 = blurredimage; %I wonder how important this initialization is
-z2 = ApplyA(blurredimage);
 
-for k=1:stepnumber
-    x = proxtf(z1); %perform resolvent of A
-    y = proxtg(z2); % perform resolvent of B
-    b = 2.*y-z2;
-    u = invertMatrix(double(2.*x-z1)+ApplyATrans(b));
-    v = ApplyA(u);
-    z1 = double(z1) + relaxation.*(double(u)-double(x));
-    z2 = double(z2) + relaxation.*(double(v)-double(y));
+if strcmp(algorithm, "douglasrachfordprimal")==1
+    update_iterants = @(iterants, k) PrimalDRSplit(iterants, problem, params, ApplyA, invertMatrix, ApplyATrans, (k==params.maxiter));
+elseif strcmp(algorithm, "douglasrachfordprimaldual")
+    update_iterants = @(iterants) PrimalDualUpdate(iterants, problem, params);
+elseif strcmp(algorithm, "admm")==1
+    update_iterants = @(iterants) AdmmUpdate(iterants, problem, params);
+elseif strcmp(algorithm, "chambollepock")==1
+    update_iterants = @(iterants) ChambolleUpdate(iterants, problem, params);
+end
 
-
-unblur = proxtf(z1);
+for k=1:params.maxiter % For each step
+    iterants = update_iterants(iterants, k); % Update iterants
+optsolve = iterants; % Output result
 end 
