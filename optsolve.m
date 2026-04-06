@@ -64,10 +64,17 @@ elseif strcmp(algorithm, "douglasrachfordprimaldual")
 elseif strcmp(algorithm, "admm")==1
     update_iterants = @(iterants) AdmmUpdate(iterants, problem, params);
 elseif strcmp(algorithm, "chambollepock")==1
-    update_iterants = @(iterants) ChambolleUpdate(iterants, problem, params);
+    L2 = max(max(abs(eigArry_K).^2 + abs(eigArry_D1).^2 + abs(eigArry_D2).^2));
+    check = params.schamb * params.tchamb * L2;
+    fprintf('Stability Check (s*t*L^2): %.4f\n', check);
+    update_iterants = @(iterants, k) ChambolleUpdate(iterants, problem, params, ApplyA, ApplyATrans, blurredimage);
 end
-
-for k=1:params.maxiter % For each step
-    iterants = update_iterants(iterants, k); % Update iterants
-optsolve = iterants; % Output result
-end 
+tic;
+for k=1:params.maxiter
+    iterants = update_iterants(iterants, k);
+    if mod(k, 50) == 0
+        fprintf('Iter %4d | Time: %.2f s\n', k, toc);
+    end
+end
+optsolve = iterants;
+end

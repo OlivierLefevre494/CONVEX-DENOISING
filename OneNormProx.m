@@ -1,20 +1,11 @@
 function [ out ] = OneNormProx(x1, b, t)
-% Computes the proximal operator of the 2 norm  squared at x1
-[numRows, numCols] = size(x1);
-res = zeros(numRows, numCols);
-
-for i = 1:numRows
-    for j = 1:numCols
-        if (x1(i, j)-b(i,j) > t)
-            res(i,j)=x1(i,j)-b(i,j)-t;
-        elseif (-t<x1(i,j)-b(i,j)) && (x1(i,j)-b(i,j)<t)
-            res(i,j) = 0;
-        else
-            res(i,j) = x1(i,j) - b(i,j)+ t;
-        end
-
-    end
-end
-
-out = res+double(b);
+    % 1. Calculate the difference
+    diff = x1 - b;
+    
+    % sign(diff) preserves the direction
+    % max(abs(diff) - t, 0) shrinks the magnitude
+    res = sign(diff) .* max(abs(diff) - t, 0);
+    
+    % Add the background back to get the final result
+    out = res + b;
 end
