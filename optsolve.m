@@ -37,7 +37,18 @@ applyDTrans = @(y) applyD1Trans(y(:,:,1)) + applyD2Trans(y(:, :, 2));
 % Function which computes the (I + K^TK + D^TD)x where x in R^(m x n)
 % matrix and the eigenvalues of I + t*t*K^TK + t*t*D^TD; here t is the
 % stepsizes
-t = params.tprimaldr; % Need to change this for the various algorithms you are applying
+
+% dirty, will work for now
+if strcmp(algorithm, "douglasrachfordprimal")==1
+    t = params.tprimaldr;
+elseif strcmp(algorithm, "douglasrachfordprimaldual")
+    t = params.tprimaldualdr;
+elseif strcmp(algorithm, "admm")==1
+    t = params.tadmm;
+elseif strcmp(algorithm, "chambollepock")==1
+    t = params.tchamb;
+end
+
 applyMat = @(x) x + applyKTrans(applyK(x)) + applyDTrans(applyD(x));
 eigValsMat = ones(numRows, numCols) + t*t*eigArry_KTrans.*eigArry_K + t*t*eigArry_D1Trans.*eigArry_D1...
     + t*t*eigArry_D2Trans.*eigArry_D2;
@@ -49,7 +60,7 @@ invertMatrix = @(x) ifft2(fft2(x)./eigValsMat);
 if strcmp(algorithm, "douglasrachfordprimal")==1
     update_iterants = @(iterants, k) PrimalDRSplit(iterants, problem, params, ApplyA, invertMatrix, ApplyATrans, (k==params.maxiter));
 elseif strcmp(algorithm, "douglasrachfordprimaldual")
-    update_iterants = @(iterants) PrimalDualUpdate(iterants, problem, params);
+    update_iterants = @(iterants, k) PrimalDualDRSplit(iterants, problem, blurredimage, params, ApplyA, invertMatrix, ApplyATrans, (k==params.maxiter));
 elseif strcmp(algorithm, "admm")==1
     update_iterants = @(iterants) AdmmUpdate(iterants, problem, params);
 elseif strcmp(algorithm, "chambollepock")==1
