@@ -62,7 +62,7 @@ if strcmp(algorithm, "douglasrachfordprimal")==1
 elseif strcmp(algorithm, "douglasrachfordprimaldual")
     update_iterants = @(iterants, k) PrimalDualDRSplit(iterants, problem, blurredimage, params, ApplyA, invertMatrix, ApplyATrans, (k==params.maxiter));
 elseif strcmp(algorithm, "admm")==1
-    update_iterants = @(iterants) AdmmUpdate(iterants, problem, params);
+    update_iterants = @(iterants, k) AdmmUpdate(iterants, problem, blurredimage, params, ApplyA, invertMatrix, ApplyATrans, (k == params.maxiter));
 elseif strcmp(algorithm, "chambollepock")==1
     update_iterants = @(iterants) ChambolleUpdate(iterants, problem, params);
 end
@@ -70,4 +70,4 @@ end
 for k=1:params.maxiter % For each step
     iterants = update_iterants(iterants, k); % Update iterants
 optsolve = iterants; % Output result
-end 
+end
