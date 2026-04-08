@@ -1,6 +1,6 @@
 function iterants = DefaultInitializeIterants(algorithm, blurredimage)
 if strcmp(algorithm, "douglasrachfordprimal")==1
-    iterants.z1 = zeros(size(blurredimage)) + 0.5;
+    iterants.z1 = zeros([size(blurredimage), 1 ]) + 0.5;
     iterants.z2 = zeros([size(blurredimage), 3]) + 0.5;
 elseif strcmp(algorithm, "douglasrachfordprimaldual")
     iterants.p = zeros(size(blurredimage)) + 0.5;

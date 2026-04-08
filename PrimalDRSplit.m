@@ -1,6 +1,6 @@
 function [ out ] = PrimalUpdate(iterants, problem, params, ApplyA, invertMatrix, ApplyATrans, last)
 if last
-    out = NormalizeImage(iterants.z1)
+    out = NormalizeImage(iterants.z1);
 else
 
     iterants.x = NormalizeImage(iterants.z1);
@@ -15,7 +15,6 @@ else
     iterants.v = ApplyA(iterants.u);
     iterants.z1 = double(iterants.z1) + (params.rhoprimaldr).*(double(iterants.u)-double(iterants.x));
     iterants.z2 = double(iterants.z2) + (params.rhoprimaldr).*(double(iterants.v)-double(iterants.y));
-    
     
     out = iterants;
 
