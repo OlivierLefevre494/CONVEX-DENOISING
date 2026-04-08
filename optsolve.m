@@ -1,4 +1,4 @@
-function [ optsolve ] = optsolve(problem, algorithm, iterants ,kernel, blurredimage, params)
+function [ optsolve ] = optsolve(problem, algorithm, iterants ,kernel, blurredimage, params, endresult, conv)
 [numRows, numCols] = size(blurredimage); %numRows = m, numCols = n
 
 
@@ -41,17 +41,26 @@ applyDTrans = @(y) applyD1Trans(y(:,:,1)) + applyD2Trans(y(:, :, 2));
 % dirty, will work for now
 if strcmp(algorithm, "douglasrachfordprimal")==1
     t = params.tprimaldr;
+    s=t;
 elseif strcmp(algorithm, "douglasrachfordprimaldual")
     t = params.tprimaldualdr;
+    s=t;
 elseif strcmp(algorithm, "admm")==1
     t = params.tadmm;
+    s=t;
 elseif strcmp(algorithm, "chambollepock")==1
     t = params.tchamb;
+    s = params.schamb;
 end
+
+if (conv)
+    distance=zeros(params.maxiter-1, 1);
+end
+
 
 applyMat = @(x) x + applyKTrans(applyK(x)) + applyDTrans(applyD(x));
 eigValsMat = ones(numRows, numCols) + t*t*eigArry_KTrans.*eigArry_K + t*t*eigArry_D1Trans.*eigArry_D1...
-    + t*t*eigArry_D2Trans.*eigArry_D2;
+    + s*t*eigArry_D2Trans.*eigArry_D2;
 
 %R^(m x n) Computing (I + K^T*K + D^T*D)^(-1)*x
 invertMatrix = @(x) ifft2(fft2(x)./eigValsMat); 
@@ -75,6 +84,13 @@ for k=1:params.maxiter
     if mod(k, 50) == 0
         fprintf('Iter %4d | Time: %.2f s\n', k, toc);
     end
+    if conv && k~=params.maxiter
+        distance(k, 1)=norm((iterants.x-endresult),2);
+    end
+   
 end
-optsolve = iterants;
+if conv
+    optsolve = distance;
+else 
+    optsolve = iterants;
 end
