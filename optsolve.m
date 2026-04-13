@@ -1,7 +1,16 @@
 function [ optsolve ] = optsolve(problem, algorithm, iterants ,kernel, blurredimage, params, endresult, conv)
+arguments
+    problem
+    algorithm
+    iterants
+    kernel
+    blurredimage
+    params
+    endresult = 0 % by default, conv is not activated
+    conv = false
+end
+
 [numRows, numCols] = size(blurredimage); %numRows = m, numCols = n
-
-
 
 %computes the numRow x numCol matrix of the eigenvalues for K and D1 and
 %D2; Here D1 = I oplus D1 in the paper and D2 = D1 oplus I.
