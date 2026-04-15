@@ -1,4 +1,4 @@
-function iterants = ChambolleUpdate(iterants, problem, params, ApplyA, ApplyATrans, b)
+function iterants = ChambolleUpdate(iterants, problem, b, params, ApplyA, ApplyATrans)
     % unpack the iterants
     x = iterants.x;
     y = iterants.y; 

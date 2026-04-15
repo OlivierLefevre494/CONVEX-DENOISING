@@ -1,13 +1,13 @@
-function [ out ] = PrimalUpdate(iterants, problem, params, ApplyA, invertMatrix, ApplyATrans, last)
+function [ out ] = PrimalDRUpdate(iterants, problem, blurredimage, params, ApplyA, invertMatrix, ApplyATrans, last)
 if last
     out = NormalizeImage(iterants.z1);
 else
 
     iterants.x = NormalizeImage(iterants.z1);
     if strcmp(problem, "l2")==1
-        iterants.y = cat(3, TwoNormProx(iterants.z2(:,:,1), params.blurredimage, params.tprimaldr), IsoProx(iterants.z2(:,:,2), iterants.z2(:,:,3), params.gammal2*params.tprimaldr));
+        iterants.y = cat(3, TwoNormProx(iterants.z2(:,:,1), blurredimage, params.tprimaldr), IsoProx(iterants.z2(:,:,2), iterants.z2(:,:,3), params.gammal2*params.tprimaldr));
     elseif strcmp(problem, "l1")==1
-        iterants.y = cat(3, OneNormProx(iterants.z2(:,:,1), params.blurredimage, params.tprimaldr), IsoProx(iterants.z2(:,:,2), iterants.z2(:,:,3), params.gammal1*params.tprimaldr));
+        iterants.y = cat(3, OneNormProx(iterants.z2(:,:,1), blurredimage, params.tprimaldr), IsoProx(iterants.z2(:,:,2), iterants.z2(:,:,3), params.gammal1*params.tprimaldr));
     end
     
     iterants.b = 2.*iterants.y-iterants.z2;

@@ -1,4 +1,4 @@
-function [ out ] = PrimalDualDRSplit(iterants, problem, blurredimage, params, ApplyA, invertMatrix, ApplyATrans, last)
+function [ out ] = PrimalDualDRUpdate(iterants, problem, blurredimage, params, ApplyA, invertMatrix, ApplyATrans, last)
 if last
     out = NormalizeImage(iterants.p);
 else
