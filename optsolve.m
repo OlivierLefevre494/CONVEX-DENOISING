@@ -36,62 +36,54 @@ applyKTrans = @(x) applyPeriodicConv2D(x, eigArry_KTrans);
 applyD1Trans = @(x) applyPeriodicConv2D(x, eigArry_D1Trans);
 applyD2Trans = @(x) applyPeriodicConv2D(x, eigArry_D2Trans);
 
-applyD = @(x) cat(3, applyD1(x), applyD2(x));
-
 ApplyA = @(x) cat(3, applyK(x), applyD1(x), applyD2(x));
 ApplyATrans = @(x) applyKTrans(x(:,:,1)) + applyD1Trans(x(:,:,2)) + applyD2Trans(x(:,:,3)); 
 
-applyDTrans = @(y) applyD1Trans(y(:,:,1)) + applyD2Trans(y(:, :, 2));
+switch algorithm
+    case 'douglasrachfordprimal'
+        t = params.tprimaldr;
+    case 'douglasrachfordprimaldual'
+        t = params.tprimaldualdr;
+    case 'admm'
+        t = params.tadmm;
+    case 'chambollepock'
+        t = params.tchamb;
+        s = params.schamb;
+    otherwise
+        error('Not valid algorithm "%s"', algorithm);
+end
 
-% Function which computes the (I + K^TK + D^TD)x where x in R^(m x n)
-% matrix and the eigenvalues of I + t*t*K^TK + t*t*D^TD; here t is the
-% stepsizes
+% Resolvent for Algo 1&3
+eigA2 = abs(eigArry_K).^2 + abs(eigArry_D1).^2 + abs(eigArry_D2).^2;
 
-% dirty, will work for now
-if strcmp(algorithm, "douglasrachfordprimal")==1
-    t = params.tprimaldr;
-    s=t;
-elseif strcmp(algorithm, "douglasrachfordprimaldual")
-    t = params.tprimaldualdr;
-    s=t;
-elseif strcmp(algorithm, "admm")==1
-    t = params.tadmm;
-    s=t;
-elseif strcmp(algorithm, "chambollepock")==1
-    t = params.tchamb;
-    s = params.schamb;
+eigVals_noStep = 1 + eigA2;
+invertMatrixNoStep = @(x) ifft2(fft2(x) ./ eigVals_noStep);
+ 
+% Resolvent for Algo 2
+eigVals_withStep = 1 + t*t*eigA2;
+invertMatrixWithStep = @(x) ifft2(fft2(x) ./ eigVals_withStep);
+
+switch algorithm
+    case 'douglasrachfordprimal'
+        update_iterants = @(it, k) PrimalDRSplit(it, problem, params, ApplyA, invertMatrixNoStep, ApplyATrans, (k == params.maxiter));
+ 
+    case 'douglasrachfordprimaldual'
+        update_iterants = @(it, k) PrimalDualDRSplit(it, problem, blurredimage, params, ApplyA, invertMatrixWithStep, ApplyATrans, (k == params.maxiter));
+ 
+    case 'admm'
+        update_iterants = @(it, k) AdmmUpdate(it, problem, blurredimage, params, ApplyA, invertMatrixNoStep, ApplyATrans, (k == params.maxiter));
+ 
+    case 'chambollepock'
+        L2 = max(eigA2(:));
+        check = s * t * L2;
+        fprintf('Stability check (s*t*||A||^2): %.4f   (must be < 1)\n', check);
+        update_iterants = @(it, k) ChambolleUpdate(it, problem, params, ApplyA, ApplyATrans, blurredimage);
 end
 
 if (conv)
     distance=zeros(params.maxiter-1, 1);
 end
 
-applyMat = @(x) x + applyKTrans(applyK(x)) + applyDTrans(applyD(x));
-eigValsATA = eigArry_KTrans .* eigArry_K + eigArry_D1Trans .* eigArry_D1 + eigArry_D2Trans .* eigArry_D2;
-
-if strcmp(algorithm, "douglasrachfordprimal") || strcmp(algorithm, "admm")
-    eigValsMat = ones(numRows, numCols) + eigValsATA;
-elseif strcmp(algorithm, "douglasrachfordprimaldual")
-    eigValsMat = ones(numRows, numCols) + t*t .* eigValsATA;
-elseif strcmp(algorithm, "chambollepock")
-    eigValsMat = [];
-end
-%R^(m x n) Computing (I + K^T*K + D^T*D)^(-1)*x
-invertMatrix = @(x) ifft2(fft2(x)./eigValsMat); 
-
-
-if strcmp(algorithm, "douglasrachfordprimal")==1
-    update_iterants = @(iterants, k) PrimalDRSplit(iterants, problem, params, ApplyA, invertMatrix, ApplyATrans, (k==params.maxiter));
-elseif strcmp(algorithm, "douglasrachfordprimaldual")
-    update_iterants = @(iterants, k) PrimalDualDRSplit(iterants, problem, blurredimage, params, ApplyA, invertMatrix, ApplyATrans, (k==params.maxiter));
-elseif strcmp(algorithm, "admm")==1
-    update_iterants = @(iterants, k) AdmmUpdate(iterants, problem, blurredimage, params, ApplyA, invertMatrix, ApplyATrans, (k == params.maxiter));
-elseif strcmp(algorithm, "chambollepock")==1
-    L2 = max(max(abs(eigArry_K).^2 + abs(eigArry_D1).^2 + abs(eigArry_D2).^2));
-    check = params.schamb * params.tchamb * L2;
-    fprintf('Stability Check (s*t*L^2): %.4f\n', check);
-    update_iterants = @(iterants, k) ChambolleUpdate(iterants, problem, params, ApplyA, ApplyATrans, blurredimage);
-end
 tic;
 for k=1:params.maxiter
     iterants = update_iterants(iterants, k);
@@ -99,7 +91,7 @@ for k=1:params.maxiter
         fprintf('Iter %4d | Time: %.2f s\n', k, toc);
     end
     if conv && k~=params.maxiter
-        distance(k, 1)=norm((iterants.x-endresult),2);
+        distance(k, 1) = norm(iterants.x(:) - endresult(:), 2);
     end
    
 end

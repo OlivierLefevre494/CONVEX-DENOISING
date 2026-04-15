@@ -9,4 +9,10 @@ params.tprimaldualdr = 2.0;
 
 params.rhoprimaldualdr = 0.1;
 params.rhoprimaldr = 0.1;
+
+params.tadmm   = 1.0;
+params.rhoadmm = 1.0;
+
+params.tchamb = 0.8;
+params.schamb = 0.15;
 end
