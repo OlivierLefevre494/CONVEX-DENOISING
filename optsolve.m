@@ -57,11 +57,16 @@ if (conv)
     distance=zeros(params.maxiter-1, 1);
 end
 
-
 applyMat = @(x) x + applyKTrans(applyK(x)) + applyDTrans(applyD(x));
-eigValsMat = ones(numRows, numCols) + t*t*eigArry_KTrans.*eigArry_K + t*t*eigArry_D1Trans.*eigArry_D1...
-    + s*t*eigArry_D2Trans.*eigArry_D2;
+eigValsATA = eigArry_KTrans .* eigArry_K + eigArry_D1Trans .* eigArry_D1 + eigArry_D2Trans .* eigArry_D2;
 
+if strcmp(algorithm, "douglasrachfordprimal") || strcmp(algorithm, "admm")
+    eigValsMat = ones(numRows, numCols) + eigValsATA;
+elseif strcmp(algorithm, "douglasrachfordprimaldual")
+    eigValsMat = ones(numRows, numCols) + t*t .* eigValsATA;
+elseif strcmp(algorithm, "chambollepock")
+    eigValsMat = [];
+end
 %R^(m x n) Computing (I + K^T*K + D^T*D)^(-1)*x
 invertMatrix = @(x) ifft2(fft2(x)./eigValsMat); 
 
