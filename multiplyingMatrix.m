@@ -34,8 +34,13 @@ applyDTrans = @(y) applyD1Trans(y(:,:,1)) + applyD2Trans(y(:, :, 2));
 % stepsizes
 t = i.tprimaldr; % Need to change this for the various algorithms you are applying
 applyMat = @(x) x + applyKTrans(applyK(x)) + applyDTrans(applyD(x));
-eigValsMat = ones(numRows, numCols) + t*t*eigArry_KTrans.*eigArry_K + t*t*eigArry_D1Trans.*eigArry_D1...
-    + t*s*eigArry_D2Trans.*eigArry_D2;
+
+if strcmp(algorithm, "douglasrachfordprimal" || strcmp(algorithm, "admm"))
+    eigValsMat = ones(numRows, numCols) + eigArry_KTrans .* eigArry_K + eigArry_D1Trans .* eigArry_D1 + eigArry_D2Trans .* eigArry_D2;
+elseif strcmp(algorithm, "douglasrachfordprimaldual")
+    t = i.primaldualdr;
+    eigValsMat = ones(numRows, numCols) + t*t*eigArry_KTrans.*eigArry_K + t*t*eigArry_D1Trans.*eigArry_D1 + t*s*eigArry_D2Trans.*eigArry_D2;
+end
 
 %R^(m x n) Computing (I + K^T*K + D^T*D)^(-1)*x
 invertMatrix = @(x) ifft2(fft2(x)./eigValsMat); 
