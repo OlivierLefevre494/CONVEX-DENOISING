@@ -65,10 +65,10 @@ invertMatrixWithStep = @(x) ifft2(fft2(x) ./ eigVals_withStep);
 
 switch algorithm
     case 'douglasrachfordprimal'
-        update_iterants = @(it, k) PrimalDRSplit(it, problem, params, ApplyA, invertMatrixNoStep, ApplyATrans, (k == params.maxiter));
+        update_iterants = @(it, k) PrimalDRUpdate(it, problem, blurredimage, params, ApplyA, invertMatrixNoStep, ApplyATrans, (k == params.maxiter));
  
     case 'douglasrachfordprimaldual'
-        update_iterants = @(it, k) PrimalDualDRSplit(it, problem, blurredimage, params, ApplyA, invertMatrixWithStep, ApplyATrans, (k == params.maxiter));
+        update_iterants = @(it, k) PrimalDualDRUpdate(it, problem, blurredimage, params, ApplyA, invertMatrixWithStep, ApplyATrans, (k == params.maxiter));
  
     case 'admm'
         update_iterants = @(it, k) AdmmUpdate(it, problem, blurredimage, params, ApplyA, invertMatrixNoStep, ApplyATrans, (k == params.maxiter));
@@ -77,7 +77,7 @@ switch algorithm
         L2 = max(eigA2(:));
         check = s * t * L2;
         fprintf('Stability check (s*t*||A||^2): %.4f   (must be < 1)\n', check);
-        update_iterants = @(it, k) ChambolleUpdate(it, problem, params, ApplyA, ApplyATrans, blurredimage);
+        update_iterants = @(it, k) ChambolleUpdate(it, problem, blurredimage, params, ApplyA, ApplyATrans);
 end
 
 if (conv)
