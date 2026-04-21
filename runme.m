@@ -10,10 +10,16 @@ kernel = fspecial('gaussian',9,4.0);
 noisename = 'salt & pepper';
 noisedens = 0.1;
 
+% specify padding size for anti-aliasing
+P=10; % THIS IS THE OPTIMAL PADDING FOR 9x9 KERNEL, CHANGE IT IF KERNEL SIZE CHANGES
+
 % specify algorithm, problem and associated parameters
 problem = 'l1';
 algorithm = 'douglasrachfordprimaldual';
 params = DefaultParams(); % can change this to this for user-defined params
+params.tprimaldualdr = 0.8;
+params.gammal1 = 0.03;
+params.rhoprimaldualdr = 1.0;
 
 %% READ, CORRUPT AND PADD IMAGE
 
@@ -21,16 +27,10 @@ myimage = PreprocessImage(mypath); % read image
 blurredimage = imfilter(myimage, kernel); % blur image
 blurredimage = imnoise(blurredimage, noisename, noisedens); % add noise
 
-% we zero padd the corrupted image to prevent aliasing errors
-P = max(size(kernel));
-P=0;
+% we padd (replicate BCs) the corrupted image to prevent aliasing errors
 blurredimage = padarray(blurredimage, [P, P], "replicate");
 
 %% RUN DENOISING ALGORITHM
-
-params.tprimaldualdr = 0.8;
-params.gammal1 = 0.01;
-params.rhoprimaldualdr = 1.0;
 
 iterants = DefaultInitializeIterants(algorithm, blurredimage); % can change the starting point if wanted...
 outputimage = optsolve(problem, algorithm, iterants, kernel, blurredimage, params);
@@ -51,7 +51,7 @@ set(groot,'defaultLegendFontSize',20);
 set(groot,'defaultfigurecolor',[1 1 1]);
 set(0, 'DefaultLineLineWidth', 1);
 
-figure(2)
+figure(1)
 tiledlayout(1, 3, 'Padding', 'none', 'TileSpacing', 'compact');
 nexttile; imshow(myimage,[]); title("Original Image")
 nexttile; imshow(blurredimage,[]); title("Corrupted Image")
