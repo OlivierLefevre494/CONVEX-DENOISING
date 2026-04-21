@@ -1,4 +1,4 @@
-function iterants = ChambolleUpdate(iterants, problem, b, params, ApplyA, ApplyATrans)
+function iterants = ChambolleUpdate(iterants, problem, b, params, ApplyA, ApplyATrans, last)
     % unpack the iterants
     x = iterants.x;
     y = iterants.y; 
@@ -45,4 +45,7 @@ function iterants = ChambolleUpdate(iterants, problem, b, params, ApplyA, ApplyA
     iterants.x = x_new;
     iterants.y = y;
     iterants.z = z_new;
+    if last
+        iterants = iterants.x;
+    end
 end

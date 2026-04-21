@@ -1,4 +1,4 @@
-function [ optsolve ] = optsolve(problem, algorithm, iterants ,kernel, blurredimage, params, endresult, conv)
+function [ out ] = optsolve(problem, algorithm, iterants ,kernel, blurredimage, params, endresult, conv)
 arguments
     problem % l1 or l2 problem
     algorithm % name of the algorithm
@@ -79,7 +79,7 @@ switch algorithm
         L2 = max(eigA2(:));
         check = s * t * L2;
         fprintf('Stability check (s*t*||A||^2): %.4f   (must be < 1)\n', check);
-        update_iterants = @(it, k) ChambolleUpdate(it, problem, blurredimage, params, ApplyA, ApplyATrans);
+        update_iterants = @(it, k) ChambolleUpdate(it, problem, blurredimage, params, ApplyA, ApplyATrans, (k==params.maxiter));
 end
 
 if (conv)
@@ -87,18 +87,41 @@ if (conv)
 end
 
 tic;
+init = 0;
 for k=1:params.maxiter
     iterants = update_iterants(iterants, k);
     if mod(k, 50) == 0
         fprintf('Iter %4d | Time: %.2f s\n', k, toc);
+        if k~=params.maxiter
+            fprintf('Loss Gain %.4f \n', init - mean(abs(iterants.x-endresult).^2, "all"))
+            init = mean(abs(iterants.x-endresult).^2, "all");
+        else
+            fprintf('Loss Gain %.4f \n', init - mean(abs(iterants-endresult).^2, "all"))
+            init = mean(abs(iterants-endresult).^2, "all");
+        end
     end
     if conv && k~=params.maxiter
         distance(k, 1) = norm(iterants.x(:) - endresult(:), 2);
     end
-   
+   if k==params.maxiter
+       stop_reason = "max iteration number reached";
+   else
+       stop_reason = "converged!";
+   end
 end
 if conv
-    optsolve = distance;
-else 
-    optsolve = iterants;
+    out = distance;
+else
+    out = iterants;
 end
+
+MSE=mean(abs(out - endresult).^2, 'all');
+SSIM= ssim(out, endresult);
+total_cpu_time = toc;
+
+fprintf('Stop reason: %s\n', stop_reason);
+fprintf('Mean Squared Error: %.4f\n', MSE);
+fprintf('Structural Similarity Index: %.4f\n', SSIM);
+fprintf('Total CPU time: %.2f s\n', total_cpu_time);
+end
+
