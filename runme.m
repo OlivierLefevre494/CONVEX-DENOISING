@@ -17,9 +17,6 @@ P=10; % THIS IS THE OPTIMAL PADDING FOR 9x9 KERNEL, CHANGE IT IF KERNEL SIZE CHA
 problem = 'l1';
 algorithm = 'douglasrachfordprimaldual';
 params = DefaultParams(); % can change this to this for user-defined params
-params.tprimaldualdr = 0.8;
-params.gammal1 = 0.03;
-params.rhoprimaldualdr = 1.0;
 
 %% READ, CORRUPT AND PADD IMAGE
 
@@ -27,13 +24,13 @@ myimage = PreprocessImage(mypath); % read image
 blurredimage = imfilter(myimage, kernel); % blur image
 blurredimage = imnoise(blurredimage, noisename, noisedens); % add noise
 
-% we padd (replicate BCs) the corrupted image to prevent aliasing errors
+% we padd (replicate BCs) the corrupted image to mitigate aliasing errors
 blurredimage = padarray(blurredimage, [P, P], "replicate");
 
 %% RUN DENOISING ALGORITHM
 
 iterants = DefaultInitializeIterants(algorithm, blurredimage); % can change the starting point if wanted...
-outputimage = optsolve(problem, algorithm, iterants, kernel, blurredimage, params);
+outputimage = optsolve(problem, algorithm, iterants, kernel, blurredimage, params); % solve!
 
 %% SHOW RESULTS
 
