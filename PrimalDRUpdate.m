@@ -17,7 +17,7 @@ else
     iterants.z2 = double(iterants.z2) + (params.rhoprimaldr).*(double(iterants.v)-double(iterants.y));
     
     out = iterants;
-
+    
 end
-
+iterants.output = iterants.x;
 end

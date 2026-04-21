@@ -65,6 +65,12 @@ invertMatrixNoStep = @(x) ifft2(fft2(x) ./ eigVals_noStep);
 eigVals_withStep = 1 + t*t*eigA2;
 invertMatrixWithStep = @(x) ifft2(fft2(x) ./ eigVals_withStep);
 
+if strcmp("l1", problem)==1
+    loss = @(x) norm(abs(applyK(x) - blurredimage), 1) + params.gammal1 * (sum(applyD1(x).^2 + applyD2(x).^2, "all").^0.5);
+else
+    loss = @(x) norm(abs(applyK(x) - blurredimage), 2) + params.gammal2 * (sum(applyD1(x).^2 + applyD2(x).^2, "all").^0.5);
+end
+
 switch algorithm
     case 'douglasrachfordprimal'
         update_iterants = @(it, k) PrimalDRUpdate(it, problem, blurredimage, params, ApplyA, invertMatrixNoStep, ApplyATrans, (k == params.maxiter));
@@ -87,27 +93,40 @@ if (conv)
 end
 
 tic;
+old = 12;
 init = 0;
 for k=1:params.maxiter
     iterants = update_iterants(iterants, k);
+
     if mod(k, 50) == 0
-        fprintf('Iter %4d | Time: %.2f s\n', k, toc);
-        if k~=params.maxiter
-            fprintf('Loss Gain %.4f \n', init - mean(abs(iterants.x-endresult).^2, "all"))
-            init = mean(abs(iterants.x-endresult).^2, "all");
-        else
-            fprintf('Loss Gain %.4f \n', init - mean(abs(iterants-endresult).^2, "all"))
-            init = mean(abs(iterants-endresult).^2, "all");
+        if k~= params.maxiter
+            fprintf('Iter %4d | Time: %.2f s\n', k, toc);
+            fprintf('Loss Gain %.9f \n', (init - loss(iterants.output)));
+            old = init;
+            init = loss(iterants.output);
+        else 
+            fprintf('Iter %4d | Time: %.2f s\n', k, toc);
+            fprintf('Loss Gain %.9f \n', (init - loss(iterants)));
+            old = init;
+            init = loss(iterants);
         end
+
     end
     if conv && k~=params.maxiter
         distance(k, 1) = norm(iterants.x(:) - endresult(:), 2);
     end
-   if k==params.maxiter
-       stop_reason = "max iteration number reached";
-   else
+
+   if abs(init)<1e-3 && abs(old)<1e-3
        stop_reason = "converged!";
+       if k~=params.maxiter
+           iterants=iterants.output;
+       end
+       break;
+   else
+       stop_reason = "reached max iterations";
    end
+
+
 end
 if conv
     out = distance;

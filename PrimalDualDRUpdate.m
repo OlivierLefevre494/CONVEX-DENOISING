@@ -21,4 +21,5 @@ else
     
     out = iterants;
 end
+iterants.output = iterants.x;
 end

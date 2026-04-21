@@ -45,6 +45,7 @@ function iterants = ChambolleUpdate(iterants, problem, b, params, ApplyA, ApplyA
     iterants.x = x_new;
     iterants.y = y;
     iterants.z = z_new;
+    iterants.output = iterants.x;
     if last
         iterants = iterants.x;
     end

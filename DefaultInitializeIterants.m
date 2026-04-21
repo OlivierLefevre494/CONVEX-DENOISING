@@ -15,4 +15,5 @@ elseif strcmp(algorithm, "chambollepock")==1
     iterants.y = zeros([size(blurredimage), 3]);
     iterants.z = blurredimage;
 end
+iterants.output = zeros(size(blurredimage));
 end

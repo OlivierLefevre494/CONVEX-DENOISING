@@ -43,7 +43,7 @@ function [out] = AdmmUpdate(iterants, problem, blurredimage, params, ApplyA, inv
         iterants.y = y;
         iterants.w = w;
         iterants.z = z;
-
         out = iterants;
     end
+    iterants.output = invertMatrix(double(u) + ApplyATrans(double(y)) - (1/t) .* (double(w) + ApplyATrans(double(z))));
 end
