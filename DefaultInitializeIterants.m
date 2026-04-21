@@ -11,6 +11,8 @@ elseif strcmp(algorithm, "admm")==1
     iterants.w = zeros(size(blurredimage)) + 0.5;
     iterants.y = zeros([size(blurredimage), 3]) + 0.5;
 elseif strcmp(algorithm, "chambollepock")==1
-    % Add initialization here
+    iterants.x = blurredimage;
+    iterants.y = zeros([size(blurredimage), 3]);
+    iterants.z = blurredimage;
 end
 end
