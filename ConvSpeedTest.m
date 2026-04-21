@@ -31,7 +31,7 @@ fprintf('||A||^2 = %.4f\n', Anorm2);
 
 % Parameters per algorithm
 common = struct();
-common.maxiter = 1000; % Enough to see convergence
+common.maxiter = 2000; % Enough to see convergence
 common.gammal1 = 0.01;
 common.gammal2 = 0.005; % Not used since its an L1 problem
 
@@ -46,12 +46,12 @@ common.tprimaldr   = 0.1;
 common.rhoprimaldr = 1.9;
 
 % Primal-Dual DR
-common.tprimaldualdr   = 10;
-common.rhoprimaldualdr = 1.9;
+common.tprimaldualdr   = 16;
+common.rhoprimaldualdr = 0.8;
 
 % ADMM
-common.tadmm   = 10.0;
-common.rhoadmm = 1.35;
+common.tadmm   = 16;
+common.rhoadmm = 1.5;
 
 % Initializations
 init_cp           = struct('x', b, 'y', zeros(M,N,3), 'z', b);

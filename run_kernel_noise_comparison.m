@@ -153,7 +153,7 @@ fprintf('\nAll outputs in: %s/\n', outdir);
 
 function p = build_params(Anorm2, problem, gamma)
     p = DefaultParams();
-    p.maxiter = 10000;
+    p.maxiter = 2000;
 
     if strcmp(problem, 'l1')
         p.gammal1 = gamma;

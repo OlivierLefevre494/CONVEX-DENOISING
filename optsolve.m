@@ -99,18 +99,15 @@ for k=1:params.maxiter
     iterants = update_iterants(iterants, k);
 
     if mod(k, 50) == 0
-        if k~= params.maxiter
-            fprintf('Iter %4d | Time: %.2f s\n', k, toc);
-            fprintf('Loss Gain %.9f \n', (init - loss(iterants.output)));
-            old = init;
-            init = loss(iterants.output);
-        else 
-            fprintf('Iter %4d | Time: %.2f s\n', k, toc);
-            fprintf('Loss Gain %.9f \n', (init - loss(iterants)));
-            old = init;
-            init = loss(iterants);
+        if k ~= params.maxiter
+            x_curr = iterants.x;       % struct form
+        else
+            x_curr = iterants;         % finalized matrix form
         end
-
+        fprintf('Iter %4d | Time: %.2f s\n', k, toc);
+        fprintf('Loss Gain %.9f \n', (init - loss(x_curr)));
+        old = init;
+        init = loss(x_curr);
     end
     if conv && k~=params.maxiter
         distance(k, 1) = norm(iterants.x(:) - endresult(:), 2);
@@ -134,13 +131,17 @@ else
     out = iterants;
 end
 
-MSE=mean(abs(out - endresult).^2, 'all');
-SSIM= ssim(out, endresult);
-total_cpu_time = toc;
+if ~conv
+    MSE = mean(abs(out - endresult).^2, 'all');
+    SSIM = ssim(out, endresult);
+    fprintf('Stop reason: %s\n', stop_reason);
+    fprintf('Mean Squared Error: %.4f\n', MSE);
+    fprintf('Structural Similarity Index: %.4f\n', SSIM);
+    fprintf('Total CPU time: %.2f s\n', toc);
+else
+    fprintf('Stop reason: %s\n', stop_reason);
+    fprintf('Total CPU time: %.2f s\n', toc);
+end
 
-fprintf('Stop reason: %s\n', stop_reason);
-fprintf('Mean Squared Error: %.4f\n', MSE);
-fprintf('Structural Similarity Index: %.4f\n', SSIM);
-fprintf('Total CPU time: %.2f s\n', total_cpu_time);
 end
 
