@@ -1,13 +1,15 @@
 function [ optsolve ] = optsolve(problem, algorithm, iterants ,kernel, blurredimage, params, endresult, conv)
 arguments
-    problem
-    algorithm
-    iterants
-    kernel
-    blurredimage
-    params
-    endresult = 0 % by default, conv is not activated
-    conv = false
+    problem % l1 or l2 problem
+    algorithm % name of the algorithm
+    iterants % initialization of the iterants for the algorithm (can use DefaultInitializeIterants.m)
+    kernel % blurring kernel
+    blurredimage % corrupted image as an mxn matrix
+    params % algorithm params (can use DefaultParams.m)
+    endresult = 0 % expected end result for algorithm (if evaluating convergence)
+    conv = false % convergence study mode (on/off)
+
+    % By default, convergence study mode is not activate.
 end
 
 [numRows, numCols] = size(blurredimage); %numRows = m, numCols = n
