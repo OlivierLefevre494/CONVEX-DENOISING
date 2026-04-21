@@ -5,11 +5,23 @@ arguments
     iterants % initialization of the iterants for the algorithm (can use DefaultInitializeIterants.m)
     kernel % blurring kernel
     blurredimage % corrupted image as an mxn matrix
-    params % algorithm params (can use DefaultParams.m)
-    endresult = 0 % expected end result for algorithm (if evaluating convergence)
+    params = DefaultParams() % algorithm params (can use DefaultParams.m)
+    endresult = missing % expected end result for algorithm (if evaluating convergence)
     conv = false % convergence study mode (on/off)
 
     % By default, convergence study mode is not activate.
+end
+
+% Default initialization of any missing parameters
+defparams = DefaultParams();
+deffields = fieldnames(defparams);
+fields = fieldnames(params);
+
+fieldsToAdd = setdiff(deffields, fields);
+
+for i = 1:length(fieldsToAdd)
+    fieldName = fieldsToAdd{i};
+    params.(fieldName) = defparams.(fieldName);
 end
 
 [numRows, numCols] = size(blurredimage); %numRows = m, numCols = n
@@ -131,7 +143,7 @@ else
     out = iterants;
 end
 
-if ~conv
+if ~ismissing(endresult)
     MSE = mean(abs(out - endresult).^2, 'all');
     SSIM = ssim(out, endresult);
     fprintf('Stop reason: %s\n', stop_reason);
