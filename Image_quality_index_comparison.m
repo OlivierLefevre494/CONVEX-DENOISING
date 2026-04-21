@@ -21,6 +21,7 @@ blurredimage = imfilter(testimage, kernel);
 blurredimage = imnoise(blurredimage, 'salt & pepper', 0.1);
 MSEref = mean((blurredimage - testimage).^2, 'all');
 MSAref = mean(abs(blurredimage - testimage), 'all');
+SSIMref = ssim(blurredimage, testimage);
 
 
 %% Test with primal-dual results
@@ -54,10 +55,9 @@ ssim2 = ssim(outputimage2, testimage)
 figure(1)
 tiledlayout(1, 3, 'Padding', 'none', 'TileSpacing', 'compact');
 nexttile; imshow(blurredimage,[]); title(sprintf("MSE = %.4f,    MAE = %.4f", MSEref, MSAref))
-nexttile; imshow(outputimagel1,[]); title(sprintf("MSE = %.4f,    MAE = %.4f", MSE1, MAE1))
-nexttile; imshow(outputimagel2,[]); title(sprintf("MSE = %.4f,    MAE = %.4f", MSE2, MAE2))
+nexttile; imshow(outputimage1,[]); title(sprintf("MSE = %.4f,    MAE = %.4f", MSE1, MAE1))
+nexttile; imshow(outputimage2,[]); title(sprintf("MSE = %.4f,    MAE = %.4f", MSE2, MAE2))
 
-%%
 exportgraphics(gcf, "fig_PDDRS_imqual.png", "Resolution",500)
 %% Test identical MSE
 rng(1);
@@ -92,6 +92,9 @@ nexttile; imshow(corruptrot1,[]); title(sprintf("MSE = %.4f", MSErot1))
 nexttile; imshow(corruptblur2,[]); title(sprintf("MAE = %.4f", MAEblur2))
 nexttile; imshow(corruptsandp2,[]); title(sprintf("MAE = %.4f", MAEnoise2))
 nexttile; imshow(corruptrot2,[]); title(sprintf("MAE = %.4f", MAErot2))
+
+%%
+exportgraphics(gcf, "fig_corrupted_imqual.png", "Resolution",500)
 
 %% FFT explanation
 tiledlayout(1, 4, 'Padding', 'none', 'TileSpacing', 'compact');
