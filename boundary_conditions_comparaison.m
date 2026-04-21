@@ -13,6 +13,7 @@ set(0, 'DefaultLineLineWidth', 1);
 rng(1);
 
 
+%% Import image
 
 testimage = PreprocessImage("testimages/cameraman.jpg");
 
@@ -24,23 +25,27 @@ testimage = PreprocessImage("testimages/cameraman.jpg");
 % corruptsandp1 = imnoise(testimage, 'salt & pepper', 0.04);
 % corruptrot1 = imfilter(testimage, fspecial('motion',18.4,30));
 
+%% Some test kernels/noising
 kernel1 =fspecial('gaussian',60,4);
 kernel2 =fspecial('gaussian',80,4);
-
 kernel3 = fspecial('motion', 18.4, 30);
 noise1 = @(testimage) imnoise(testimage, 'salt & pepper',0.10);
 
 
-%% List of possible boundary conditions
+%% List of possible boundary conditions/algs and padding amounts
 algorithm = ["chambollepock", "douglasrachfordprimal", "douglasrachfordprimaldual", "admm"];
 boundary_conditions = ["Replicate"];
 padding_amount = [10, 20, 30, 40, 50, 60]; %% impact on speed?
 
+%%Function that runs the opt solve with some built-in padding
 function [ out ] = BoundaryCondition(boundary_condition, padding_amount, image, kernel, noise, algorithm)
 CONST_VALUE = 0.5;
 
+%% blur and noise image
 blurredimage = imfilter(image, kernel);
 blurredimage = noise(blurredimage);
+
+%% pad blurred and noised image
 if strcmp(boundary_condition, "0")
     boundary_condition = 0;
 end
@@ -51,6 +56,8 @@ elseif strcmp(boundary_condition, "Constant")
 else
     padded_image = padarray(blurredimage, [padding_amount, padding_amount], lower(boundary_condition), "both");
 end
+
+%% initialize and run opt solve
 iterants = DefaultInitializeIterants(algorithm, padded_image);
 params = DefaultParams();
 out = optsolve("l1", algorithm, iterants, kernel, padded_image, params, padded_image,false);
@@ -68,7 +75,7 @@ figure(1)
 tiledlayout(2, 3, 'Padding', 'none', 'TileSpacing', 'compact');
 
 % 
-% %% run all boundary conditions
+% %% run all boundary conditions and plot them side by side
 for i = 1:length(boundary_conditions)
      boundary_condition = boundary_conditions(i);
      corruptblur1 = BoundaryCondition(boundary_condition, 10, testimage, kernel1, noise1, "douglasrachfordprimaldual");
@@ -78,12 +85,12 @@ end
 
 
 %% for each combination of kernel/algorithm/padding type, run experiment, return table/struct of results
-results = table(); % Initialize an empty table to store results
+results = table();
 results2 = table();
-for i = 1:length(boundary_conditions)
-    for j = 1:length(padding_amount)
+for i = 1:length(boundary_conditions) % for each boundary condition
+    for j = 1:length(padding_amount) % for each padding amount
         padding_amt = padding_amount(j);
-        for k = 1:length(algorithm)
+        for k = 1:length(algorithm) % for each algorithm
              for l = 1:2
                 if l==1
                     kernel = kernel1;
@@ -91,7 +98,7 @@ for i = 1:length(boundary_conditions)
                     kernel = kernel2;
                 end
                 noise = noise1; 
-                corruptImage = BoundaryCondition(boundary_conditions(i), padding_amt, testimage, kernel, noise, algorithm(k));
+                corruptImage = BoundaryCondition(boundary_conditions(i), padding_amt, testimage, kernel, noise, algorithm(k)); %% Run boundary condition script
                 MSE = immse(corruptImage, testimage); % Calculate Mean Squared Error
                 if l==1
                     results = [results; table(padding_amt, algorithm(k), MSE)]; % Store results

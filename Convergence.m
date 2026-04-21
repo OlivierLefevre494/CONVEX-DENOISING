@@ -1,10 +1,13 @@
 function [ out ] = OptimizeFinalError()
+% Test script to check the convergence for different algorithms + some initial hyper parameter searching
 
 algorithms = ["douglasrachfordprimal"];
 parameters = ["gammal1", "rho", "t"];
 images = ["testimages/cameraman.jpg"]; %"testimages/mcgill.jpg",, "testimages/manWithHat.tiff"
 problems = ["l1", "l2"];
 kernels = [struct("size", 5, 'sigma', 3), struct("size", 8, 'sigma', 5)]; % add noise
+
+
 % gamma max, min, step size
 % rho max, min, step size
 % t max, min, step size
@@ -59,7 +62,7 @@ for alg = algorithms
                                 params.blurredimage = blurredimage;
                                 err = optsolve(problem, alg, iterants, kernel, blurredimage, params, img, true);
                                 % out is the distance between unblurred and
-                                % blurred, so store that
+                                % blurred
                                 out(iter) = struct('algorithm', alg, 'gamma', gamma, 'rho', rho, 't', t, 'error', err, 'kernels', kernel, 'images', imgPath, 'problem', problem);
                                 iter = iter + 1;
                                 fprintf('Iter %4d | Time: %.2f completion \n', iter-1, ((iter-1)/totalnumberofiterations)*100);
