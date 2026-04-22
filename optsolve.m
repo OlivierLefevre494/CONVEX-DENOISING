@@ -143,7 +143,7 @@ else
     out = iterants;
 end
 
-if ~all(ismissing(endresult)) && ~conv
+if ~all(ismissing(endresult), 'all') && ~conv
     MSE = mean(abs(out - endresult).^2, 'all');
     SSIM = ssim(out, endresult);
     fprintf('Stop reason: %s\n', stop_reason);
