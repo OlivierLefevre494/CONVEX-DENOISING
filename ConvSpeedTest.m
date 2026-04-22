@@ -42,16 +42,16 @@ common.schamb = sqrt(cp_prod / (Anorm2 * cp_ratio));
 common.tchamb = cp_ratio * common.schamb;
 
 % Primal DR
-common.tprimaldr   = 0.1;
-common.rhoprimaldr = 1.9;
+common.tprimaldr   = 0.3;
+common.rhoprimaldr = 1;
 
 % Primal-Dual DR
-common.tprimaldualdr   = 16;
+common.tprimaldualdr   = 10;
 common.rhoprimaldualdr = 0.8;
 
 % ADMM
-common.tadmm   = 16;
-common.rhoadmm = 1.5;
+common.tadmm   = 10;
+common.rhoadmm = 0.3;
 
 % Initializations
 init_cp           = struct('x', b, 'y', zeros(M,N,3), 'z', b);
@@ -125,36 +125,45 @@ end
 
 
 %  Plotting
-
 fig = figure('Name','Algorithm comparison','Position',[80 80 1400 500]);
 cmap = lines(n_algos);
+startIter = 5;  % skip the spike
 
-% Panel (a): distance vs iteration
+% Floor subtraction: gives clean straight-line sublinear descent on log-log
+d_floor  = min(arrayfun(@(r) min(r.dists), results));
+eps_plot = 1e-6;   % avoid log(0)
+
+% Panel (a): distance vs iteration  (log-log to reveal sublinear rate)
 subplot(1,2,1); hold on;
 for a = 1:n_algos
-    semilogy(results(a).dists, 'Color', cmap(a,:), 'LineWidth', 1.6, ...
-             'DisplayName', results(a).label);
+    k = startIter:length(results(a).dists);
+    loglog(k, results(a).dists(startIter:end) - d_floor + eps_plot, ...
+           'Color', cmap(a,:), 'LineWidth', 1.6, ...
+           'DisplayName', results(a).label);
 end
 hold off;
-set(gca,'YScale','log'); grid on;
-xlabel('iteration'); ylabel('||x^k - I||_2');
-title('(a) Convergence vs iteration');
+set(gca,'XScale','log','YScale','log'); grid on;
+xlabel('iteration k  (log scale)');
+ylabel('||x^k - I||_2 - floor  (log scale)');
+title('(a) Sublinear convergence vs iteration');
 legend('Location','best');
 
 % Panel (b): distance vs wall-clock time
 subplot(1,2,2); hold on;
 for a = 1:n_algos
-    t_axis = (1:length(results(a).dists)) * results(a).time_per_iter;
-    semilogy(t_axis, results(a).dists, 'Color', cmap(a,:), 'LineWidth', 1.6, ...
-             'DisplayName', results(a).label);
+    t_axis = (startIter:length(results(a).dists)) * results(a).time_per_iter;
+    loglog(t_axis, results(a).dists(startIter:end) - d_floor + eps_plot, ...
+           'Color', cmap(a,:), 'LineWidth', 1.6, ...
+           'DisplayName', results(a).label);
 end
 hold off;
-set(gca,'YScale','log'); grid on;
-xlabel('wall-clock time (s)'); ylabel('||x^k - I||_2');
-title('(b) Convergence vs wall-clock time');
+set(gca,'XScale','log','YScale','log'); grid on;
+xlabel('wall-clock time (s)  (log scale)');
+ylabel('||x^k - I||_2 - floor  (log scale)');
+title('(b) Sublinear convergence vs wall-clock time');
 legend('Location','best');
 
-sgtitle(sprintf('Four-algorithm convergence comparison  (Gaussian blur + S&P 0.05, L1, %d iters)', common.maxiter));
+sgtitle(sprintf('Four-algorithm sublinear convergence comparison  (Gaussian blur + S&P 0.05, L1, %d iters)', common.maxiter));
 saveas(fig, fullfile(outdir, 'algorithm_comparison.png'));
 
 %  STEP 4 — Summary table

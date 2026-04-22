@@ -197,7 +197,7 @@ fprintf('\nAll outputs in: %s/\n', outdir);
 
 function p = build_params(Anorm2, b)
     p = DefaultParams();
-    p.maxiter = 1000;
+    p.maxiter = 2000;
     p.gammal1 = 0.01;
     p.gammal2 = 0.005;
     
