@@ -15,7 +15,8 @@ P=10; % THIS IS THE OPTIMAL PADDING FOR 9x9 KERNEL, CHANGE IT IF KERNEL SIZE CHA
 
 % specify algorithm, problem and associated parameters
 problem = 'l1';
-algorithm = 'douglasrachfordprimal';
+algorithm = 'douglasrachfordprimaldual';
+algorithm = 'admm';
 params = DefaultParams(); % can change this to this for user-defined params
 
 % NOTE THAT OPTSOLVE CAN RUN WITHOUT EXPLICIT PARAMETER SPECIFICATION OR
