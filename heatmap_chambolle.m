@@ -91,7 +91,7 @@ for row = 1:numel(sGrid)
 
             % extract the reconstruction and undo the padding before
             % comparing against the original image.
-            reconstruction = real(result.x);
+            reconstruction = real(result);
             if usePadding
                 reconstruction = reconstruction(1+pad:end-pad, 1+pad:end-pad);
             end
