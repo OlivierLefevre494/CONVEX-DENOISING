@@ -95,8 +95,8 @@ for row = 1:numSweeps
         fprintf("Running %s: %s, gamma = %.4g, rho = %.4g, t = %.4g\n", ...
             algorithm, problem, gamma, rho, t);
 
-        iterants = DefaultInitializeIterants(algorithm, bSolver);
-        result = optsolve(problem, algorithm, iterants, kernel, bSolver, params);
+        iterants = DefaultInitializeIterants(algorithm, B);
+        result = optsolve(problem, algorithm, iterants, kernel, B, params);
         result = real(result);
 
         if usePadding
